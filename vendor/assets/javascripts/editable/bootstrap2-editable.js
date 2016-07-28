@@ -3264,7 +3264,7 @@ $(function(){
                                            type: 'checkbox',
                                            value: this.sourceData[i].value
                                      }))
-                                     .append($('<span>').text(' '+this.sourceData[i].text));
+                                     .append($('<span>').addClass('item-text').text(' '+this.sourceData[i].text));
 
                 $('<div>').append($label).appendTo(this.$tpl);
             }
