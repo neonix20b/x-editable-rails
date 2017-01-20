@@ -4,15 +4,16 @@ class ViewHelpersTest < ActionView::TestCase
   include X::Editable::Rails::ViewHelpers
 
   class Subject < OpenStruct
-    extend ActiveModel::Naming
-    extend ActiveModel::Translation
+    include ActiveModel::Model
+
+    attr_accessor :id, :name, :content, :active
+
+    def self.model_name
+      ActiveModel::Name.new(self, nil, "Page")
+    end
 
     def initialize(attributes={})
       super(attributes.merge(id: 1, name: "test subject"))
-    end
-
-    def to_param
-      "#{id}-#{name}".parameterize
     end
   end
 
@@ -49,6 +50,84 @@ class ViewHelpersTest < ActionView::TestCase
     assert_match %r{<span[^>]+title="First Title"},
                  editable(subject, :name, title: "First Title", html: { title: 'Second Title' }),
                  "ViewHelpers#editable should generate content tag with html options"
+  end
+
+  test "editable should generate content tag with data attributes" do
+    subject = Subject.new
+
+    assert_match %r{<span[^>]+data-model="page"},
+                 editable(subject, :name),
+                 "ViewHelpers#editable should generate content tag with data attributes"
+
+    assert_no_match %r{<span[^>]+data-model="page"},
+                    editable(subject, :name, model: "custom"),
+                    "ViewHelpers#editable should generate content tag with data attributes"
+  end
+
+  test "editable should generate content tag with the current value" do
+    subject_1 = Subject.new(content: "foo")
+
+    assert_match %r{<span[^>]+>foo</span>},
+                 editable(subject_1, :content),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+>foo</span>},
+                 editable(subject_1, :content, type: "select", source: ["foo", "bar"]),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+>Foo</span>},
+                 editable(subject_1, :content, type: "select", source: [["foo", "Foo"], ["bar", "Bar"]]),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+>Foo</span>},
+                 editable(subject_1, :content, type: "select", source: { "foo" => "Foo", "bar" => "Bar" }),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+>Foo</span>},
+                 editable(subject_1, :content, type: "select", source: [{ text: "Foo", value: "foo" }, { text: "Bar", value: "bar" }]),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    refute_match %r{data-source=},
+                 editable(subject_1, :content, type: "select"),
+                 "ViewHelpers#editable should generate content tag without source"
+
+    subject_2 = Subject.new(active: true)
+
+    assert_match %r{<span[^>]+>Yes</span>},
+                 editable(subject_2, :active),
+                 "ViewHelpers#editable should generate content tag with the current value"
+  end
+
+  test "editable should store the source url as a data attribute" do
+    subject = Subject.new
+    assert_match %r{<span[^>]+data-source="http://example.org"},
+                 editable(subject, :name, type: "select",
+                 source: "http://example.org"),
+                 "ViewHelpers#editable should generate content tag with url source as a data attribute"
+  end
+
+  test "editable should generate content tag without current value" do
+    subject_1 = Subject.new(content: nil)
+
+    assert_match %r{<span[^>]+></span>},
+                 editable(subject_1, :content),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+></span>},
+                 editable(subject_1, :content, type: "select", source: ["foo", "bar"]),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+></span>},
+                 editable(subject_1, :content, type: "select", source: [["foo", "Foo"], ["bar", "Bar"]]),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+></span>},
+                 editable(subject_1, :content, type: "select", source: { "foo" => "Foo", "bar" => "Bar" }),
+                 "ViewHelpers#editable should generate content tag with the current value"
+
+    assert_match %r{<span[^>]+></span>},
+                 editable(subject_1, :content, type: "select", source: [{ text: "Foo", value: "foo" }, { text: "Bar", value: "bar" }]),
+                 "ViewHelpers#editable should generate content tag with the current value"
   end
 
   private
