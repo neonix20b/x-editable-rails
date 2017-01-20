@@ -14258,7 +14258,7 @@ wysihtml5.views.View = Base.extend(
     // Can be set to false if toolobar is set to display only on editable area focus
     showToolbarAfterInit: true,
     // Whether urls, entered by the user should automatically become clickable-links
-    autoLink:             true,
+    autoLink:             false,
     // Includes table editing events and cell selection tracking
     handleTables:         true,
     // Tab key inserts tab into text as default behaviour. It can be disabled to regain keyboard navigation
